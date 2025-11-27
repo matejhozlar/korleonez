@@ -14,6 +14,7 @@
     "env:gen": "node src/scripts/env/env-gen.js",
     "env:find": "node src/scripts/env/env-find.js",
     "import:find": "node src/scripts/dependency/import-find.js",
+    "deploy-commands": "node src/discord/deployer/deploy-commands.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:unit": "vitest run --dir src/tests/unit",

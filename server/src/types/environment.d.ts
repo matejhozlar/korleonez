@@ -6,8 +6,8 @@ declare global {
       NODE_ENV: "production" | "development" | "test";
       // minecraft
       MC_SERVER_IP: string;
-      MC_SERVER_PORT: number;
-      MC_QUERY_PORT: number;
+      MC_SERVER_PORT: string;
+      MC_QUERY_PORT: string;
       MC_SERVER_NAME: string;
       // discord
       DISCORD_BOT_TOKEN: string;

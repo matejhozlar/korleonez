@@ -20,8 +20,8 @@ bot.once("clientReady", async () => {
 
   const mcStatusManager = MinecraftStatusManager.getInstance(
     process.env.MC_SERVER_IP,
-    process.env.MC_SERVER_PORT,
-    process.env.MC_QUERY_PORT
+    parseInt(process.env.MC_SERVER_PORT),
+    parseInt(process.env.MC_QUERY_PORT)
   );
 
   await mcStatusManager.start(bot);
