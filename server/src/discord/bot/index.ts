@@ -1,4 +1,6 @@
 import { Client, GatewayIntentBits } from "discord.js";
+import { registerInteractionHandler } from "../handlers/interaction-handler";
+import { loadCommandHandlers } from "../loaders/command-loader";
 
 const bot = new Client({
   intents: [
@@ -18,8 +20,13 @@ bot.once("clientReady", async () => {
   logger.info("Discord bot logged in as", bot.user.tag);
 });
 
-bot.login(process.env.DISCORD_BOT_TOKEN).catch((error) => {
-  logger.error("Failed to login Discord bot:", error);
+(async () => {
+  const commandHandlers = await loadCommandHandlers();
+  registerInteractionHandler(bot, commandHandlers);
+
+  await bot.login(process.env.DISCORD_BOT_TOKEN);
+})().catch((error) => {
+  logger.error("Failed to initialize Discord bot:", error);
   process.exit(1);
 });
 

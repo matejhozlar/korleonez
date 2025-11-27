@@ -1,4 +1,5 @@
 import api from "./api";
-import app from "./app";
+import logger from "./logger.config";
+import app from "./app.config";
 
-export default { api, app };
+export default { api, logger, app };

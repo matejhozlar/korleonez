@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config({ quiet: true });
-
+global.logger = loggerInstance;
 import { validateEnv } from "./utils/env/env-validate";
 validateEnv();
 
@@ -9,8 +9,6 @@ import { createApp } from "./app";
 import loggerInstance from "./logger";
 import { shutdownBot } from "./discord/utils/shut-down";
 import bot from "./discord/bot";
-
-global.logger = loggerInstance;
 
 const PORT = process.env.PORT;
 
