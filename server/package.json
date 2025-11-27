@@ -42,6 +42,7 @@
     "express": "^5.1.0",
     "express-rate-limit": "^8.2.1",
     "fast-glob": "^3.3.3",
+    "minecraft-server-util": "^5.4.4",
     "winston": "^3.18.3"
   }
 }

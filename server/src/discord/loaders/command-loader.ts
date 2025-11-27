@@ -31,7 +31,6 @@ export async function loadCommandHandlers(): Promise<
   const commandsPath = path.join(
     __dirname,
     "..",
-    "..",
     "interactions",
     "slash-commands"
   );

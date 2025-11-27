@@ -50,14 +50,14 @@ async function handleChatCommand(
 /**
  * Registers the main interaction handler for chat commands
  *
- * @param bot - The Discord client instance
+ * @param discordClient - The Discord client instance
  * @param commandHandlers - Collection of slash command handlers
  */
 export function registerInteractionHandler(
-  bot: Client,
+  discordClient: Client,
   commandHandlers: Collection<string, CommandModule>
 ): void {
-  bot.on("interactionCreate", async (interation: Interaction) => {
+  discordClient.on("interactionCreate", async (interation: Interaction) => {
     if (interation.isChatInputCommand()) {
       await handleChatCommand(interation, commandHandlers);
       return;

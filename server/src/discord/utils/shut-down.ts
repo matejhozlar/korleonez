@@ -18,11 +18,11 @@ interface ShutdownBotOptions {
  * @param client - The Discord client instance to shut down
  * @param options - Shutdown configuration options
  */
-export const shutdownBot = async (client: Client): Promise<void> => {
+export const shutdownBot = async (discordClient: Client): Promise<void> => {
   logger.info(`Discord bot shutting down...`);
 
   try {
-    await client.destroy();
+    await discordClient.destroy();
     logger.info("Discord bot shut down successfully");
   } catch (error) {
     logger.error("Error during Discord bot shutdown:", error);

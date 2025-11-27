@@ -4,8 +4,11 @@ declare global {
       // app
       PORT: number;
       NODE_ENV: "production" | "development" | "test";
+      // minecraft
       MC_SERVER_IP: string;
+      MC_SERVER_PORT: number;
       MC_QUERY_PORT: number;
+      MC_SERVER_NAME: string;
       // discord
       DISCORD_BOT_TOKEN: string;
       DISCORD_BOT_ID: string;
