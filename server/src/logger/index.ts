@@ -4,7 +4,7 @@ import util from "node:util";
 import winston from "winston";
 import config from "@/config";
 
-const logDir = config.logger.logDir;
+const logDir = config.app.logg.logDir;
 const SPLAT = Symbol.for("splat");
 
 class DailyFolderLogger {
@@ -128,7 +128,7 @@ class DailyFolderLogger {
         this.logger.close();
         this.currentDate = newDate;
         this.logger = this.createLoggerForDate(this.currentDate);
-        this.cleanOldLogFolders(config.logger.keepDays);
+        this.cleanOldLogFolders(config.app.logg.keepDays);
       }
     }, 60 * 1000);
   }

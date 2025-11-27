@@ -41,6 +41,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "express-rate-limit": "^8.2.1",
-    "fast-glob": "^3.3.3"
+    "fast-glob": "^3.3.3",
+    "winston": "^3.18.3"
   }
 }
