@@ -1,0 +1,20 @@
+/node_modules
+.env
+.env.test.local
+.env.test
+src/services/.env
+src/logs/
+src/services/logs/
+src/stats
+src/tmp
+src/uploads
+src/scripts/users/data/
+src/scripts/db/out
+logs
+dist
+
+# assets
+src/services/assets
+src/app/routes/assets
+src/discord/assets
+src/app/routes/download
