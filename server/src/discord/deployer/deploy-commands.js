@@ -18,6 +18,11 @@ const commands = [
     .setDescription(
       `Shows the list of players currently online on ${process.env.MC_SERVER_NAME} server`
     ),
+  new SlashCommandBuilder()
+    .setName("ip")
+    .setDescription(
+      `Get connection details and status for ${process.env.MC_SERVER_NAME} server`
+    ),
 ].map((cmd) => cmd.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(TOKEN);

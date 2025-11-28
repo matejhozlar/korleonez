@@ -1,6 +1,7 @@
 import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import type { ChatInputCommandInteraction } from "discord.js";
 import { MinecraftStatusManager } from "@/services/minecraft-status/minecraft-status.service";
+import config from "@/config";
 
 /**
  * Slash command configuration for the /list command
@@ -51,8 +52,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 
   const embed = new EmbedBuilder()
-    .setTitle("Minecraft server status")
-    .setColor(status.online ? 0x00ff00 : 0xff0000)
+    .setTitle("Minecraft Server Status")
+    .setColor(status.online ? config.ui.color.GREEN : config.ui.color.RED)
     .setTimestamp(status.lastUpdated);
 
   if (!status.online) {

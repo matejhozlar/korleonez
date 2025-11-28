@@ -1,12 +1,16 @@
-import { status } from "minecraft-server-util";
 import type { Client } from "discord.js";
 import { ActivityType } from "discord.js";
 
+/**
+ * Presents a player currently on the Minecraft server
+ */
 interface MinecraftPlayer {
   name: string;
   uuid: string;
 }
-
+/**
+ * Reperesents the current status of Minecraft server
+ */
 interface MinecraftStatus {
   online: boolean;
   playerCount: number;
@@ -16,10 +20,32 @@ interface MinecraftStatus {
   version: string;
   lastUpdated: Date;
 }
-
 /**
- * Manages periodic monitoring of Minecraft server status and updates Discord bot presence accordingly
- * Implements singleton pattern to ensure only one instance monitors the server
+ * Response structure from mcstatus.io API
+ * @internal
+ */
+interface McStatusResponse {
+  online: boolean;
+  host: string;
+  port: number;
+  players?: {
+    online: number;
+    max: number;
+    list?: Array<{
+      name_clean: string;
+      uuid: string;
+    }>;
+  };
+  version?: {
+    name_clean: string;
+  };
+  motd?: {
+    clean: string;
+  };
+}
+/**
+ * Manages periodic polling of a Minecraft server's status and updates Discord bot presence accordingly
+ * Implements the singleton pattern to ensure only one instance monitors a server at a time
  */
 export class MinecraftStatusManager {
   private static instance: MinecraftStatusManager;
@@ -30,23 +56,21 @@ export class MinecraftStatusManager {
   private constructor(
     private readonly host: string,
     private readonly port: number = 25565,
-    private readonly queryPort: number = 25565,
     private readonly updateIntervalMs: number = 30000
   ) {}
-
   /**
-   * Get or create the singleton instance of MinecraftStatusManager
+   * Creates a new MinecraftStatusManager instance
+   * Private constructor to enforce singleton pattern
+   *
    * @param host - The Minecraft server hostname or IP Address
-   * @param port - The Minecraft server port for extended server information
-   * @param queryPort - The query port for extended server information
-   * @param updateIntervalMs - How often to poll the server in milliseconds (default: 30000)
-   * @returns The singleton MinecraftStatusManager instance
-   * @throws {Error} If host is not provided on first instatiation
+   * @param port - The Minecraft server port (default: 25565)
+   * @param updateIntervalMs - How often to poll the server status (default: 30000)
+   * @returns The singleton instance
+   * @throws {Error} If host is not provided when creating the instance for the first time
    */
   public static getInstance(
     host?: string,
     port?: number,
-    queryPort?: number,
     updateIntervalMs?: number
   ): MinecraftStatusManager {
     if (!MinecraftStatusManager.instance) {
@@ -56,17 +80,17 @@ export class MinecraftStatusManager {
       MinecraftStatusManager.instance = new MinecraftStatusManager(
         host,
         port,
-        queryPort,
         updateIntervalMs
       );
     }
     return MinecraftStatusManager.instance;
   }
-
   /**
-   * Start monitoring the Minecraft server and updating Discord bot status
-   * @param discordClient - The discord.js client instance to update presence for
-   * @returns Promise that resolves when initial status fetch completes
+   * Starts monitoring the Minecraft server status and updating Discord presence
+   * Performs an immediate status check, then continues polling at the configured interval
+   *
+   * @param discordClient - The discord.js Client to update presence for
+   * @returns Promise resolving when the initial status checks is completed
    */
   public async start(discordClient: Client): Promise<void> {
     if (this.updateInterval) {
@@ -88,9 +112,9 @@ export class MinecraftStatusManager {
       await this.updateStatus();
     }, this.updateIntervalMs);
   }
-
   /**
-   * Stop monitoring the Minecraft server and clear the update interval
+   * Stops monitoring the Minecraft server status and clears the update interval
+   * Does not clear the cached status information
    */
   public stop(): void {
     if (this.updateInterval) {
@@ -99,34 +123,48 @@ export class MinecraftStatusManager {
       logger.info("Minecraft status monitoring stopped");
     }
   }
-
   /**
-   * Fetch and update server status from the Minecraft Server
-   * Updated Discord bot presence if player count changes or server goes offline
+   * Fetches the current server status from mcstatus.io API and updates internal state
+   * Automatically updates Discord presence if the player count changes
+   * If the server is unreachable, marks it as offline while preserving previous data
+   *
    * @private
-   * @returns Promise that resolves when status update completes
    */
   private async updateStatus(): Promise<void> {
     try {
-      const response = await status(this.host, this.port, {
-        timeout: 5000,
-        enableSRV: true,
+      const apiUrl = `https://api.mcstatus.io/v2/status/java/${this.host}:${this.port}`;
+
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+        },
       });
 
-      const previousPlayerCount = this.currentStatus?.playerCount ?? 0;
-      const newPlayerCount = response.players.online;
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+
+      const data: McStatusResponse = await response.json();
+
+      if (!data.online) {
+        throw new Error("Server reported as offline");
+      }
+
+      const previousPlayerCount = this.currentStatus?.playerCount;
+      const newPlayerCount = data.players?.online ?? 0;
 
       this.currentStatus = {
         online: true,
         playerCount: newPlayerCount,
-        maxPlayers: response.players.max,
+        maxPlayers: data.players?.max ?? 0,
         players:
-          response.players.sample?.map((p) => ({
-            name: p.name,
-            uuid: p.id,
+          data.players?.list?.map((p) => ({
+            name: p.name_clean,
+            uuid: p.uuid,
           })) ?? [],
-        motd: response.motd.clean,
-        version: response.version.name,
+        motd: data.motd?.clean ?? "",
+        version: data.version?.name_clean ?? "Unknown",
         lastUpdated: new Date(),
       };
 
@@ -160,9 +198,10 @@ export class MinecraftStatusManager {
       }
     }
   }
-
   /**
-   * Update Discord bot's presence/status to reflect current Minecraft server state
+   * Updates the Discord bot's presence to reflect the current Minecraft server status
+   * Shows player count and online status in the bot's custom status
+   *
    * @private
    */
   private updateDiscordStatus(): void {
@@ -184,42 +223,43 @@ export class MinecraftStatusManager {
       afk: false,
     });
   }
-
   /**
-   * Get the complete current status of the Minecraft server
-   * @returns The current server status or null if no status has been fetched yet
+   * Gets the complete current status of the Minecraft server
+   *
+   * @returns The current server status, or null if no status has been fetched yet
    */
   public getStatus(): MinecraftStatus | null {
     return this.currentStatus;
   }
-
   /**
-   * Get the list of players currently online on the server
-   * @returns Array of players currently online (empty array if no status or no players are online)
+   * Gets the list of players currently on the server
+   *
+   * @returns An array of player objects, or an empty array if unavailable
    */
   public getPlayers(): MinecraftPlayer[] {
     return this.currentStatus?.players ?? [];
   }
-
   /**
-   * Get the current number of players on the server
-   * @returns Number of players online (0 if server is offline or no status is available)
+   * Gets the current number of players on the server
+   *
+   * @returns The number of online players, 0 if unreachable
    */
   public getPlayerCount(): number {
     return this.currentStatus?.playerCount ?? 0;
   }
-
   /**
-   * Check if the Minecraft server is currently online and reachable
-   * @returns True if server is online, false otherwise
+   * Checks if the server is currently online and responsive
+   *
+   * @returns True if the server is online, false otherwise
    */
   public isOnline(): boolean {
     return this.currentStatus?.online ?? false;
   }
-
   /**
-   * Force an immediate status update outside of the regular interval
-   * @returns Promise resolving to the updated server status or null if fetch failed
+   * Forces an immediate status update outside of the normal polling interval
+   * Useful for on-demand status checks or manual refreshes
+   *
+   * @returns Promise resolving to the updated server status
    */
   public async forceUpdate(): Promise<MinecraftStatus | null> {
     await this.updateStatus();
